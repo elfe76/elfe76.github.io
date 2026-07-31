@@ -62,13 +62,33 @@
   <div class="progress-counter" id="progressCounter" aria-live="polite">1 / 1</div>
 
   <!-- Bouton pour reverrouiller l'accès sur cet appareil -->
-  <button type="button" class="lock-btn" id="lockBtn" aria-label="Verrouiller à nouveau l'accès">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
-      <path d="M8 10 V7 a4 4 0 0 1 8 0 v3" fill="none" stroke="currentColor" stroke-width="1.6"/>
-    </svg>
-    <span>Verrouiller</span>
-  </button>
+  <div class="bottom-bar bottom-bar--left">
+    <button type="button" class="pill-btn" id="lockBtn" aria-label="Verrouiller à nouveau l'accès">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M8 10 V7 a4 4 0 0 1 8 0 v3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      <span>Verrouiller</span>
+    </button>
+    <button type="button" class="pill-btn" id="helpBtn" aria-label="Aide à la navigation">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M9.5 9.2c0-1.5 1.2-2.6 2.6-2.6s2.4 1 2.4 2.2c0 1.4-1.3 1.8-2 2.5-.4.4-.6.8-.6 1.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="12" cy="16.6" r="0.9" fill="currentColor"/>
+      </svg>
+      <span>Aide</span>
+    </button>
+  </div>
+
+  <!-- Bouton pour ouvrir l'encart de remerciements -->
+  <div class="bottom-bar bottom-bar--right">
+    <button type="button" class="pill-btn" id="creditsBtn" aria-label="Remerciements">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 20 C 6 15, 3 11.5, 3 8.2 C 3 5.6 5.1 3.6 7.6 3.6 C 9.4 3.6 11 4.6 12 6.1 C 13 4.6 14.6 3.6 16.4 3.6 C 18.9 3.6 21 5.6 21 8.2 C 21 11.5 18 15, 12 20 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <span>Remerciements</span>
+    </button>
+  </div>
 
   <!-- Message de bienvenue après déverrouillage -->
   <div class="welcome-toast" id="welcomeToast">
@@ -133,6 +153,36 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 L17 12 L9 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
   <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
+</div>
+
+<!-- Popup : aide à la navigation -->
+<div class="modal" id="helpModal" aria-hidden="true">
+  <div class="modal-card">
+    <button type="button" class="modal-close" id="helpModalClose" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 L19 19 M19 5 L5 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <h3>Comment faire défiler les photos</h3>
+    <ul class="modal-list">
+      <li><strong>Clavier</strong> — flèches ← et → pour passer d'une photo à l'autre</li>
+      <li><strong>Mobile</strong> — glissez le doigt à gauche ou à droite</li>
+      <li><strong>Souris</strong> — cliquez sur la photo de gauche ou de droite pour naviguer</li>
+      <li><strong>Plein écran</strong> — cliquez sur la photo centrale pour l'agrandir</li>
+    </ul>
+    <p class="modal-note">🔒 L'enregistrement automatique des photos (clic droit / appui long) a été désactivé sur ce site.</p>
+  </div>
+</div>
+
+<!-- Popup : remerciements -->
+<div class="modal" id="creditsModal" aria-hidden="true">
+  <div class="modal-card modal-card--wide">
+    <button type="button" class="modal-close" id="creditsModalClose" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 L19 19 M19 5 L5 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <h3>Merci à eux !</h3>
+    <div class="credits-list" id="creditsList">
+      <p class="credits-empty">Chargement…</p>
+    </div>
+  </div>
 </div>
 
 <script src="js/script.js"></script>
