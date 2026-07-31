@@ -1,19 +1,19 @@
 [
   {
     "role": "Photographe",
-    "name": "Julie Martin Photographie",
+    "name": "xxXXxx Photographie",
     "link": "https://exemple.com",
     "phone": "06 12 34 56 78"
   },
   {
     "role": "DJ",
-    "name": "DJ Maxime",
+    "name": "DJ xxXXxx",
     "link": "https://exemple.com",
     "phone": "06 98 76 54 32"
   },
   {
     "role": "Traiteur",
-    "name": "Saveurs & Terroir",
+    "name": "Traiteur",
     "link": "https://exemple.com",
     "phone": ""
   },
@@ -25,7 +25,7 @@
   },
   {
     "role": "Site internet",
-    "name": "Créé avec ❤️ par Claude",
+    "name": "Créé avec ❤️ par Charly",
     "link": "",
     "phone": ""
   }
