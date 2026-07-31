@@ -1,0 +1,32 @@
+[
+  {
+    "role": "Photographe",
+    "name": "Julie Martin Photographie",
+    "link": "https://exemple.com",
+    "phone": "06 12 34 56 78"
+  },
+  {
+    "role": "DJ",
+    "name": "DJ Maxime",
+    "link": "https://exemple.com",
+    "phone": "06 98 76 54 32"
+  },
+  {
+    "role": "Traiteur",
+    "name": "Saveurs & Terroir",
+    "link": "https://exemple.com",
+    "phone": ""
+  },
+  {
+    "role": "Boulanger",
+    "name": "Boulangerie du Village",
+    "link": "",
+    "phone": "01 23 45 67 89"
+  },
+  {
+    "role": "Site internet",
+    "name": "Créé avec ❤️ par Claude",
+    "link": "",
+    "phone": ""
+  }
+]

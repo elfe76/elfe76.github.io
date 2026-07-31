@@ -238,13 +238,19 @@ html, body{
 }
 #app.unlocked .progress-counter{ opacity:0.9; }
 
-/* ---------- BOUTON VERROUILLER ---------- */
+/* ---------- BARRES DU BAS (verrouiller / aide / remerciements) ---------- */
 
-.lock-btn{
+.bottom-bar{
   position:absolute;
   bottom: 22px;
-  left: 22px;
   z-index:4;
+  display:flex;
+  gap:10px;
+}
+.bottom-bar--left{ left: 22px; }
+.bottom-bar--right{ right: 22px; }
+
+.pill-btn{
   display:flex;
   align-items:center;
   gap:6px;
@@ -263,14 +269,17 @@ html, body{
   pointer-events:none;
   transition: opacity 0.4s ease, background 0.2s ease;
 }
-.lock-btn svg{ width:14px; height:14px; }
-.lock-btn:hover{ background: rgba(58,74,55,0.45); }
-#app.unlocked .lock-btn{ opacity:0.55; pointer-events:auto; }
-#app.unlocked .lock-btn:hover{ opacity:1; }
+.pill-btn svg{ width:14px; height:14px; flex-shrink:0; }
+.pill-btn:hover{ background: rgba(58,74,55,0.45); }
+#app.unlocked .pill-btn{ opacity:0.55; pointer-events:auto; }
+#app.unlocked .pill-btn:hover{ opacity:1; }
 
 @media (max-width: 720px){
-  .lock-btn span{ display:none; }
-  .lock-btn{ padding:9px; }
+  .pill-btn span{ display:none; }
+  .pill-btn{ padding:9px; }
+  .bottom-bar{ bottom: 16px; }
+  .bottom-bar--left{ left: 16px; }
+  .bottom-bar--right{ right: 16px; }
 }
 
 /* ---------- MESSAGE DE BIENVENUE ---------- */
@@ -525,3 +534,169 @@ html, body{
 }
 
 
+
+/* ---------- POPUPS (aide / remerciements) ---------- */
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:22;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 24px;
+  background: rgba(20,28,18,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity:0;
+  visibility:hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.modal.open{
+  opacity:1;
+  visibility:visible;
+}
+
+.modal-card{
+  position:relative;
+  width:100%;
+  max-width: 420px;
+  max-height: 82vh;
+  overflow-y:auto;
+  background: var(--cream-card);
+  border: 1px solid rgba(196,178,140,0.35);
+  border-radius: var(--radius-lg);
+  padding: 36px 28px 28px;
+  box-shadow: 0 30px 70px -20px rgba(20,28,16,0.5);
+}
+.modal-card--wide{ max-width: 520px; }
+
+.modal-card h3{
+  margin: 0 0 18px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.4rem;
+  color: var(--sage-deep);
+  text-align:center;
+}
+
+.modal-close{
+  position:absolute;
+  top: 14px;
+  right: 14px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border: 1px solid var(--sage-soft);
+  background: transparent;
+  color: var(--sage-deep);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition: background 0.2s ease;
+}
+.modal-close svg{ width:16px; height:16px; }
+.modal-close:hover{ background: rgba(127,160,122,0.15); }
+
+.modal-list{
+  list-style:none;
+  margin:0 0 18px;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.modal-list li{
+  font-size: 0.92rem;
+  line-height:1.5;
+  color: var(--ink);
+  padding-left: 1.4em;
+  position:relative;
+}
+.modal-list li::before{
+  content:'✿';
+  position:absolute;
+  left:0;
+  color: var(--sage);
+  font-size:0.85em;
+}
+.modal-list strong{ color: var(--sage-deep); }
+
+.modal-note{
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(169,196,160,0.4);
+  font-size: 0.78rem;
+  color: var(--sage-deep);
+  opacity: 0.85;
+  text-align:center;
+  line-height:1.5;
+}
+
+/* Liste des remerciements */
+
+.credits-list{
+  display:flex;
+  flex-direction:column;
+  gap: 14px;
+}
+
+.credit-item{
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(169,196,160,0.14);
+  border: 1px solid rgba(169,196,160,0.35);
+}
+
+.credit-header{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.credit-role{
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sage-deep);
+  background: rgba(255,255,255,0.6);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.credit-name{
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.credit-links{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 14px;
+}
+.credit-links a{
+  font-size: 0.82rem;
+  color: var(--sage-deep);
+  text-decoration:none;
+  border-bottom: 1px solid rgba(79,107,76,0.35);
+  transition: opacity 0.2s ease;
+}
+.credit-links a:hover{ opacity:0.7; }
+
+.credits-empty{
+  text-align:center;
+  color: var(--ink);
+  opacity:0.7;
+  font-size:0.9rem;
+}
+
+@media (max-width: 720px){
+  .modal-card{ padding: 30px 20px 22px; }
+}

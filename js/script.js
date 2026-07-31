@@ -1,13 +1,13 @@
 /* ============================================
    Elsa & John — Mariage
    - Charge automatiquement toutes les photos listées dans photos.json
-   - Carrousel "coverflow" avec navigation clavier / swipe / clic
-   - Compteur de progression, verrouillage local, mode plein écran,
-     message de bienvenue, protection basique anti clic-droit
+   - Carrousel "coverflow" (statique, ne bouge que sur interaction)
+   - Compteur de progression, mode plein écran, message de bienvenue,
+     protection basique anti clic-droit, aide à la navigation,
+     encart de remerciements
    ============================================ */
 
 const ACCESS_CODE = "04072026";
-const STORAGE_KEY  = "ejWeddingAccess_v1";
 const GAP = 22;              // doit correspondre au gap défini en CSS (.carousel-track)
 const CENTER_ZONE_RATIO = 0.22; // largeur de la zone centrale (en % de l'écran) qui ouvre le plein écran
 
@@ -32,12 +32,21 @@ const lightboxPrev    = document.getElementById('lightboxPrev');
 const lightboxNext    = document.getElementById('lightboxNext');
 const lightboxCounter = document.getElementById('lightboxCounter');
 
+const helpBtn      = document.getElementById('helpBtn');
+const helpModal    = document.getElementById('helpModal');
+const helpModalClose = document.getElementById('helpModalClose');
+
+const creditsBtn   = document.getElementById('creditsBtn');
+const creditsModal = document.getElementById('creditsModal');
+const creditsModalClose = document.getElementById('creditsModalClose');
+const creditsList  = document.getElementById('creditsList');
+
 let photosList     = [];
 let photosCount    = 0;
 let slideMeta      = [];   // [{el, left, width, resting, photoIndex}]
 let singleSetWidth = 0;
 let position       = 0;    // position de défilement en px
-let isPaused       = false; // survol souris / plein écran ouvert = pause
+let isPaused       = false;
 let isDragging     = false;
 let dragStartX     = 0;
 let dragStartPos   = 0;
@@ -49,15 +58,16 @@ let welcomeTimer   = null;
 let lastTs         = null;
 let influenceRadius = 380;
 let lightboxIndex  = 0;
+let creditsLoaded  = false;
 
 function lerp(a, b, t){ return a + (b - a) * t; }
 function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
 function mod(n, m){ return ((n % m) + m) % m; }
 
-/* ---------- 0. Accès déjà mémorisé sur cet appareil ? ---------- */
-
-if(localStorage.getItem(STORAGE_KEY) === ACCESS_CODE){
-  app.classList.add('unlocked');
+function anyOverlayOpen(){
+  return lightbox.classList.contains('open') ||
+         helpModal.classList.contains('open') ||
+         creditsModal.classList.contains('open');
 }
 
 /* ---------- 1. Chargement des photos ---------- */
@@ -99,10 +109,12 @@ async function loadPhotos(){
 
   await waitForImages();
   buildSlideMeta();
-
-  position = singleSetWidth; // on démarre au milieu (2e copie), photo centrée et immobile
-
   updateInfluenceRadius();
+
+  // On centre exactement la toute première photo (2e copie = copie "centrale"),
+  // net et sans flou dès l'ouverture du site.
+  centerOnSlideIndex(photosCount, true);
+
   lastTs = null;
   requestAnimationFrame(tick);
 }
@@ -116,7 +128,6 @@ function waitForImages(){
           img.addEventListener('load', resolve, { once:true });
           img.addEventListener('error', resolve, { once:true });
         });
-    // decode() force le décodage complet en amont (évite la saccade au premier affichage)
     return ready.then(() => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()));
   }));
 }
@@ -138,6 +149,19 @@ function buildSlideMeta(){
   singleSetWidth = oneSet || 1;
 }
 
+/* Centre EXACTEMENT le slide d'index `slideIdx` (index dans slideMeta, pas photoIndex) */
+function centerOnSlideIndex(slideIdx, instant){
+  const m = slideMeta[slideIdx];
+  if(!m) return;
+  const target = m.left + m.width / 2 - window.innerWidth / 2;
+  if(instant){
+    position = target;
+    isTweening = false;
+  }else{
+    animateTo(target);
+  }
+}
+
 function updateInfluenceRadius(){
   influenceRadius = Math.max(220, Math.min(window.innerWidth, 1000) * 0.34);
 }
@@ -152,7 +176,6 @@ function wrapPosition(){
 
 function tick(ts){
   if(lastTs === null) lastTs = ts;
-  const dt = Math.min(0.05, (ts - lastTs) / 1000);
   lastTs = ts;
 
   if(isTweening){
@@ -161,7 +184,7 @@ function tick(ts){
     position = lerp(tweenFrom, tweenTo, easeOutCubic(t));
     if(t >= 1) isTweening = false;
   }
-  // Plus de défilement automatique : la position ne change que via un "tween"
+  // Pas de défilement automatique : la position ne change que via un "tween"
   // déclenché par une interaction (swipe, clic, clavier, boutons flèches).
 
   wrapPosition();
@@ -220,15 +243,15 @@ function updateProgressCounter(){
   progressCounter.textContent = (idx + 1) + ' / ' + photosCount;
 }
 
-function findFrontPhotoIndex(){
-  let best = null, bestDist = Infinity;
+function findFrontSlideIndex(){
+  let bestIdx = 0, bestDist = Infinity;
   const viewportCenter = window.innerWidth / 2;
-  for(const m of slideMeta){
+  slideMeta.forEach((m, i) => {
     const centerX = m.left + m.width / 2 - position;
     const dist = Math.abs(centerX - viewportCenter);
-    if(dist < bestDist){ bestDist = dist; best = m; }
-  }
-  return best ? best.photoIndex : 0;
+    if(dist < bestDist){ bestDist = dist; bestIdx = i; }
+  });
+  return bestIdx;
 }
 
 /* ---------- 3. Navigation manuelle du carrousel ---------- */
@@ -243,9 +266,7 @@ function animateTo(target){
 function manualStep(dir){
   if(!singleSetWidth) return;
   const avgStep = singleSetWidth / Math.max(1, photosCount);
-  isPaused = true;
   animateTo(position + dir * avgStep);
-  scheduleResume();
 }
 
 function snapToNearest(){
@@ -255,16 +276,20 @@ function snapToNearest(){
   animateTo(nearest);
 }
 
-function scheduleResume(){
-  clearTimeout(resumeTimer);
-  resumeTimer = setTimeout(() => { if(!lightbox.classList.contains('open')) isPaused = false; }, 1700);
-}
-
-/* Clavier : flèches gauche / droite (carrousel ou plein écran selon le contexte) */
+/* Clavier : flèches gauche / droite (carrousel, plein écran, ou fermeture des popups) */
 window.addEventListener('keydown', (e) => {
   if(!app.classList.contains('unlocked')) return;
   const tag = document.activeElement && document.activeElement.tagName;
   if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+  if(helpModal.classList.contains('open')){
+    if(e.key === 'Escape'){ e.preventDefault(); closeModal(helpModal); }
+    return;
+  }
+  if(creditsModal.classList.contains('open')){
+    if(e.key === 'Escape'){ e.preventDefault(); closeModal(creditsModal); }
+    return;
+  }
 
   if(lightbox.classList.contains('open')){
     if(e.key === 'ArrowLeft'){ e.preventDefault(); lightboxStep(-1); }
@@ -285,7 +310,6 @@ wrap.addEventListener('pointerdown', (e) => {
   dragMoved = false;
   dragStartX = e.clientX;
   dragStartPos = position;
-  isPaused = true;
   isTweening = false;
   try{ wrap.setPointerCapture(e.pointerId); }catch(err){}
 });
@@ -309,13 +333,12 @@ function endDrag(e){
     const centerHalf = rect.width * CENTER_ZONE_RATIO;
 
     if(Math.abs(relX - rect.width / 2) < centerHalf){
-      openLightbox(findFrontPhotoIndex());
+      openLightbox(slideMeta[findFrontSlideIndex()].photoIndex);
     }else{
       manualStep(relX < rect.width / 2 ? -1 : 1);
     }
   }else{
     snapToNearest();
-    scheduleResume();
   }
 }
 
@@ -329,18 +352,17 @@ wrap.addEventListener('contextmenu', (e) => e.preventDefault());
 prevBtn.addEventListener('click', () => manualStep(-1));
 nextBtn.addEventListener('click', () => manualStep(1));
 
-/* Redimensionnement : on recalcule les repères */
+/* Redimensionnement : on recalcule les repères et on recentre exactement */
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     updateInfluenceRadius();
     if(slideMeta.length){
-      const oldSingleSet = singleSetWidth;
+      const currentSlideIdx = findFrontSlideIndex();
+      const photoIdx = slideMeta[currentSlideIdx].photoIndex;
       buildSlideMeta();
-      if(oldSingleSet > 0){
-        position = (position / oldSingleSet) * singleSetWidth;
-      }
+      centerOnSlideIndex(photosCount + photoIdx, true);
     }
   }, 200);
 });
@@ -356,13 +378,11 @@ function openLightbox(index){
   lightboxCounter.textContent = (lightboxIndex + 1) + ' / ' + photosCount;
   lightbox.classList.add('open');
   lightbox.setAttribute('aria-hidden', 'false');
-  isPaused = true;
 }
 
 function closeLightbox(){
   lightbox.classList.remove('open');
   lightbox.setAttribute('aria-hidden', 'true');
-  isPaused = false;
 }
 
 function lightboxStep(dir){
@@ -378,7 +398,6 @@ lightboxNext.addEventListener('click', () => lightboxStep(1));
 lightboxImg.addEventListener('contextmenu', (e) => e.preventDefault());
 lightboxStage.addEventListener('contextmenu', (e) => e.preventDefault());
 
-/* Glisser / cliquer à l'extérieur de la photo pour fermer, en plein écran */
 let lbDragStartX = 0, lbDragMoved = false, lbDragging = false;
 
 lightboxStage.addEventListener('pointerdown', (e) => {
@@ -404,17 +423,75 @@ lightboxStage.addEventListener('pointerup', (e) => {
   }
 });
 
-/* ---------- 5. Verrouiller à nouveau l'accès sur cet appareil ---------- */
+/* ---------- 5. Popups génériques (aide / remerciements) ---------- */
+
+function openModal(modalEl){
+  modalEl.classList.add('open');
+  modalEl.setAttribute('aria-hidden', 'false');
+}
+function closeModal(modalEl){
+  modalEl.classList.remove('open');
+  modalEl.setAttribute('aria-hidden', 'true');
+}
+
+helpBtn.addEventListener('click', () => openModal(helpModal));
+helpModalClose.addEventListener('click', () => closeModal(helpModal));
+helpModal.addEventListener('click', (e) => { if(e.target === helpModal) closeModal(helpModal); });
+
+creditsBtn.addEventListener('click', async () => {
+  if(!creditsLoaded) await loadCredits();
+  openModal(creditsModal);
+});
+creditsModalClose.addEventListener('click', () => closeModal(creditsModal));
+creditsModal.addEventListener('click', (e) => { if(e.target === creditsModal) closeModal(creditsModal); });
+
+async function loadCredits(){
+  let credits = [];
+  try{
+    const res = await fetch('credits.json', { cache: 'no-store' });
+    if(!res.ok) throw new Error('credits.json introuvable');
+    credits = await res.json();
+  }catch(err){
+    console.warn('Impossible de charger credits.json :', err);
+  }
+
+  creditsLoaded = true;
+
+  if(!Array.isArray(credits) || credits.length === 0){
+    creditsList.innerHTML = '<p class="credits-empty">Ajoutez vos remerciements dans le fichier credits.json ✿</p>';
+    return;
+  }
+
+  creditsList.innerHTML = credits.map(c => {
+    const role = c.role ? `<span class="credit-role">${escapeHtml(c.role)}</span>` : '';
+    const name = c.name ? `<span class="credit-name">${escapeHtml(c.name)}</span>` : '';
+    const linkHtml = c.link ? `<a href="${escapeAttr(c.link)}" target="_blank" rel="noopener noreferrer">🔗 Voir</a>` : '';
+    const phoneHtml = c.phone ? `<a href="tel:${escapeAttr(c.phone.replace(/\s+/g,''))}">📞 ${escapeHtml(c.phone)}</a>` : '';
+    return `
+      <div class="credit-item">
+        <div class="credit-header">${role}${name}</div>
+        <div class="credit-links">${linkHtml}${phoneHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+/* ---------- 6. Verrouiller à nouveau l'accès (pour cette session) ---------- */
 
 lockBtn.addEventListener('click', () => {
-  localStorage.removeItem(STORAGE_KEY);
   app.classList.remove('unlocked');
   input.value = '';
   errorEl.textContent = '';
   closeLightbox();
+  closeModal(helpModal);
+  closeModal(creditsModal);
 });
 
-/* ---------- 6. Message de bienvenue ---------- */
+/* ---------- 7. Message de bienvenue ---------- */
 
 function showWelcomeToast(){
   welcomeToast.classList.add('show');
@@ -422,17 +499,18 @@ function showWelcomeToast(){
   welcomeTimer = setTimeout(() => welcomeToast.classList.remove('show'), 5200);
 }
 
-/* ---------- 7. Vérification du code d'accès ---------- */
+/* ---------- 8. Vérification du code d'accès ---------- */
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const value = input.value.trim();
 
   if(value === ACCESS_CODE){
-    localStorage.setItem(STORAGE_KEY, ACCESS_CODE);
     app.classList.add('unlocked');
     errorEl.textContent = '';
     showWelcomeToast();
+    // On recentre au cas où la mise en page ait changé pendant que le portail était affiché
+    if(slideMeta.length) centerOnSlideIndex(photosCount, true);
   } else {
     errorEl.textContent = "Code incorrect, essayez à nouveau.";
     gateCard.classList.remove('shake');
