@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Elsa & John — Notre mariage</title>
 <meta name="description" content="Les photos du mariage d'Elsa et John" />
+
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="shortcut icon" href="favicon.ico">
+
+<meta property="og:title" content="Elsa & John — Notre mariage" />
+<meta property="og:description" content="Un accès privé pour découvrir les photos de notre mariage 🌿" />
+<meta property="og:image" content="og-image.jpg" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Elsa & John — Notre mariage" />
+<meta name="twitter:image" content="og-image.jpg" />
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -25,6 +37,17 @@
     <div class="scene-veil" id="sceneVeil"></div>
   </section>
 
+  <button type="button" class="nav-arrow nav-arrow--prev" id="prevBtn" aria-label="Photo précédente">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <button type="button" class="nav-arrow nav-arrow--next" id="nextBtn" aria-label="Photo suivante">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 4 L17 12 L9 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
   <!-- Titre, visible flou ou net selon l'état -->
   <header class="hero-title" id="heroTitle">
     <p class="eyebrow">Le mariage de</p>
@@ -34,6 +57,23 @@
       <circle cx="100" cy="12" r="2.4" fill="currentColor" />
     </svg>
   </header>
+
+  <!-- Compteur de progression -->
+  <div class="progress-counter" id="progressCounter" aria-live="polite">1 / 1</div>
+
+  <!-- Bouton pour reverrouiller l'accès sur cet appareil -->
+  <button type="button" class="lock-btn" id="lockBtn" aria-label="Verrouiller à nouveau l'accès">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M8 10 V7 a4 4 0 0 1 8 0 v3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    </svg>
+    <span>Verrouiller</span>
+  </button>
+
+  <!-- Message de bienvenue après déverrouillage -->
+  <div class="welcome-toast" id="welcomeToast">
+    Bienvenue ! Et merci encore de votre présence en cette magnifique journée 🌿
+  </div>
 
   <!-- Portail d'accès -->
   <div class="gate" id="gate">
@@ -74,6 +114,25 @@
     </div>
   </div>
 
+</div>
+
+<!-- Visionnage plein écran d'une photo -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Fermer">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 5 L19 19 M19 5 L5 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+  <button type="button" class="lightbox-nav lightbox-nav--prev" id="lightboxPrev" aria-label="Photo précédente">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <div class="lightbox-stage" id="lightboxStage">
+    <img id="lightboxImg" src="" alt="Photo du mariage d'Elsa et John en plein écran" draggable="false" />
+  </div>
+  <button type="button" class="lightbox-nav lightbox-nav--next" id="lightboxNext" aria-label="Photo suivante">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 L17 12 L9 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
 </div>
 
 <script src="js/script.js"></script>
