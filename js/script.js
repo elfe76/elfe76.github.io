@@ -9,7 +9,6 @@
 const ACCESS_CODE = "04072026";
 const STORAGE_KEY  = "ejWeddingAccess_v1";
 const GAP = 22;              // doit correspondre au gap défini en CSS (.carousel-track)
-const SPEED_PER_PHOTO = 6.5; // secondes de défilement "naturel" par photo
 const CENTER_ZONE_RATIO = 0.22; // largeur de la zone centrale (en % de l'écran) qui ouvre le plein écran
 
 const track    = document.getElementById('carouselTrack');
@@ -38,7 +37,6 @@ let photosCount    = 0;
 let slideMeta      = [];   // [{el, left, width, resting, photoIndex}]
 let singleSetWidth = 0;
 let position       = 0;    // position de défilement en px
-let speedPxPerSec  = 60;
 let isPaused       = false; // survol souris / plein écran ouvert = pause
 let isDragging     = false;
 let dragStartX     = 0;
@@ -102,8 +100,7 @@ async function loadPhotos(){
   await waitForImages();
   buildSlideMeta();
 
-  speedPxPerSec = singleSetWidth / Math.max(24, photosCount * SPEED_PER_PHOTO);
-  position = singleSetWidth; // on démarre au milieu (2e copie)
+  position = singleSetWidth; // on démarre au milieu (2e copie), photo centrée et immobile
 
   updateInfluenceRadius();
   lastTs = null;
@@ -113,11 +110,14 @@ async function loadPhotos(){
 function waitForImages(){
   const imgs = Array.from(track.querySelectorAll('img'));
   return Promise.all(imgs.map(img => {
-    if(img.complete) return Promise.resolve();
-    return new Promise(resolve => {
-      img.addEventListener('load', resolve, { once:true });
-      img.addEventListener('error', resolve, { once:true });
-    });
+    const ready = img.complete
+      ? Promise.resolve()
+      : new Promise(resolve => {
+          img.addEventListener('load', resolve, { once:true });
+          img.addEventListener('error', resolve, { once:true });
+        });
+    // decode() force le décodage complet en amont (évite la saccade au premier affichage)
+    return ready.then(() => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()));
   }));
 }
 
@@ -160,9 +160,9 @@ function tick(ts){
     const t = Math.min(1, elapsed / tweenDuration);
     position = lerp(tweenFrom, tweenTo, easeOutCubic(t));
     if(t >= 1) isTweening = false;
-  } else if(!isPaused && !isDragging){
-    position += speedPxPerSec * dt;
   }
+  // Plus de défilement automatique : la position ne change que via un "tween"
+  // déclenché par une interaction (swipe, clic, clavier, boutons flèches).
 
   wrapPosition();
   render();
@@ -276,10 +276,6 @@ window.addEventListener('keydown', (e) => {
   if(e.key === 'ArrowLeft'){ e.preventDefault(); manualStep(-1); }
   else if(e.key === 'ArrowRight'){ e.preventDefault(); manualStep(1); }
 });
-
-/* Souris : pause au survol */
-wrap.addEventListener('mouseenter', () => { isPaused = true; });
-wrap.addEventListener('mouseleave', () => { if(!isDragging) isPaused = false; });
 
 /* Tactile / souris : glisser (swipe), cliquer à gauche/droite, ou cliquer au centre pour le plein écran */
 wrap.style.touchAction = 'none';
